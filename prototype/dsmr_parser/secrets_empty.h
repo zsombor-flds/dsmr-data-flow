@@ -1,3 +1,3 @@
-#define ssid = ""
-#define password = ""
-#define host = ""
+#define ssid ""
+#define password ""
+#define host ""
