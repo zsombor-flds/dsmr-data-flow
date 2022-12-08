@@ -1,0 +1,20 @@
+version: '3.7'
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_PASSWORD: "${PG_DB_PASSWORD}"
+      POSTGRES_USER : "${PG_DB_USERNAME}"
+      POSTGRES_DB : "${PG_DB_NAME}"
+    ports:
+      - "5433:5432"
+    expose:
+      - "5432"
+    restart: always
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres-exercise-db-volume:/var/lib/postgresql/data # persist the db
+    
+    network_mode: bridge
+volumes:
+  postgres-exercise-db-volume:

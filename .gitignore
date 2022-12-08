@@ -1,0 +1,8 @@
+.vscode/
+.venv/
+secrets.h
+data.csv
+.DS_Store
+.env
+postgres-dt/
+__pycache__/

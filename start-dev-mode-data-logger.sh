@@ -1,0 +1,1 @@
+docker run -it -v $PWD/src:/src -p 192.168.68.104:5000:5000 --add-host=host.docker.internal:host-gateway --env-file ../postgres/.env data-logger:v1 bash
