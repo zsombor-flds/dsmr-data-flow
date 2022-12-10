@@ -1,9 +1,15 @@
+
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
+#include <DHT.h>;
 
 #include "secrets.h"
+
+#define DHTPIN D2
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE); // setup Temp sensor
 
 typedef struct
 {
@@ -11,47 +17,44 @@ typedef struct
     String key; // OBIS code
     int start;  // start index
     int end;    // end index
-    enum
-    {
-        STRING,
-        FLOAT,
-        INT
-    } valueType;
-
 } Measurement;
 
 // Sanxing SX6x1 SxxU1x datasheet map
 String incomingString = "";
 const Measurement measurements[] = {
-    {"power_timestamp", "0-0:1.0.0", 10, 23, Measurement::STRING},
-    {"power_device_name", "0-0:42.0.0", 11, 27, Measurement::STRING},
-    {"power_breaker_status", "0-0:96.14.0", 12, 15, Measurement::STRING},
-    {"power_consumption", "1-0:15.8.0", 11, 25, Measurement::STRING},
-    {"l1_phase_voltage", "1-0:32.7.0", 11, 18, Measurement::STRING},
-    {"l2_phase_voltage", "1-0:52.7.0", 11, 18, Measurement::STRING},
-    {"l3_phase_voltage", "1-0:72.7.0", 11, 18, Measurement::STRING},
-    {"l1_phase_current", "1-0:31.7.0", 11, 16, Measurement::STRING},
-    {"l2_phase_current", "1-0:51.7.0", 11, 16, Measurement::STRING},
-    {"l3_phase_current", "1-0:71.7.0", 11, 16, Measurement::STRING}};
+    {"power_timestamp", "0-0:1.0.0", 10, 23},
+    {"power_device_name", "0-0:42.0.0", 11, 27},
+    {"power_breaker_status", "0-0:96.14.0", 12, 15},
+    {"power_consumption", "1-0:15.8.0", 11, 25},
+    {"l1_phase_voltage", "1-0:32.7.0", 11, 18},
+    {"l2_phase_voltage", "1-0:52.7.0", 11, 18},
+    {"l3_phase_voltage", "1-0:72.7.0", 11, 18},
+    {"l1_phase_current", "1-0:31.7.0", 11, 16},
+    {"l2_phase_current", "1-0:51.7.0", 11, 16},
+    {"l3_phase_current", "1-0:71.7.0", 11, 16}};
 
-char identifier[24];
-int valueState[29];
 
 DynamicJsonDocument doc(4048);
 String json;
 
 void setup()
 {
+    Serial.printf("\n\n\n App Started running\n");
+
     // Setup Serial connection to Smart Meter
     Serial.begin(115200, SERIAL_8N1, SERIAL_FULL);
+
+    // Wait until serial connection
     do
         delay(250);
     while (!Serial);
-    Serial.printf("\n\n\n App Started running\n");
 
+    // Start Temp sensor
+    dht.begin();
+
+    // Invert RX
     Serial.flush();
     USC0(UART0) = USC0(UART0) | BIT(UCRXI);
-    Serial.println("seri : RX inverted");
 
     // Setup WIFI connection
     WiFi.begin(ssid, password);
@@ -60,25 +63,30 @@ void setup()
     {
         delay(500);
     }
-    Serial.println("");
-    Serial.print("Connected to WiFi network with IP Address: ");
+    Serial.println("Connected to WiFi network with IP Address: ");
     Serial.println(WiFi.localIP());
 }
 
 void loop()
 {
 
+    float h = dht.readHumidity();
+    float t = dht.readTemperature();
+
     // If serial received, read until newline
     if (Serial.available() > 0)
     {
         incomingString = Serial.readStringUntil('\n');
         handleString(incomingString);
-        // Serial.println(incomingString);
     }
 
+    // hacky way to ensure all data from the meter are valid
     if (doc.size() > 9)
     {
-        // serializeJsonPretty(doc, Serial);
+
+        doc["humidity"] = h;
+        doc["temperature"] = t;
+
         serializeJson(doc, json);
 
         if (WiFi.status() == WL_CONNECTED)
@@ -89,11 +97,9 @@ void loop()
             http.addHeader("Content-Type", "application/json");
 
             int httpResponseCode = http.POST(json);
-            //  Serial.print("HTTP Response code: ");
-            //  Serial.println(httpResponseCode);
-            http.end();
 
             // Clear up
+            http.end();
             doc.clear();
             json = "";
         }
@@ -104,7 +110,6 @@ void loop()
     }
 }
 
-// Regex are not supported, so use indexOf and substring
 void handleString(String incomingString)
 {
     int i;
@@ -119,17 +124,6 @@ void handleString(String incomingString)
         {
 
             String value = incomingString.substring(measurement.start, measurement.end);
-            switch (measurement.valueType)
-            {
-            case Measurement::FLOAT:
-                value = String(value.toFloat(), 3);
-                break;
-            case Measurement::INT:
-                value = String(value.toInt());
-                break;
-            default:
-                break;
-            }
             doc[measurement.name] = value;
         }
     }
