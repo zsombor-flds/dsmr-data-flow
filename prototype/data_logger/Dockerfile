@@ -7,4 +7,4 @@ RUN pip install -r requirements.txt
 COPY ./src/ /src/
 WORKDIR /src
 ENV PYTHONPATH "/src"
-# CMD python3 app.py
+CMD python3 app.py
