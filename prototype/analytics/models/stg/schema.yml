@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: stg_dsmr__log
+    description: ""
+    columns:
+      - name: power_device_name
+        description: ""
+
+      - name: measure_timestamp
+        description: ""
+
+      - name: power_consumption_khw
+        description: ""
+
+      - name: l1_phase_voltage
+        description: ""
+
+      - name: l2_phase_voltage
+        description: ""
+
+      - name: l3_phase_voltage
+        description: ""
+
+      - name: l1_phase_current
+        description: ""
+
+      - name: l2_phase_current
+        description: ""
+
+      - name: l3_phase_current
+        description: ""
+
+      - name: humidity
+        description: ""
+
+      - name: temperature
+        description: ""

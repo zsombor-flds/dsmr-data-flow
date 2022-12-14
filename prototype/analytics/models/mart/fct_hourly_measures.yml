@@ -1,0 +1,35 @@
+version: 2
+models:
+  - name: fct_hourly_measures
+    columns:
+      - name: period_ts
+        description: ""
+        meta:
+          dimension:
+            type: timestamp
+      - name: period_start_power_consumption_khw
+        description: ""
+        meta:
+          dimension:
+            type: number
+      - name: period_end_power_consumption_khw
+        description: ""
+        meta:
+          dimension:
+            type: number
+      - name: period_power_consumption_khw
+        description: ""
+        meta:
+          dimension:
+            type: number
+          metrics:
+            total_power_consumption:
+              type: sum
+      - name: period_avg_temperature
+        description: ""
+        meta:
+          dimension:
+            type: number
+          metrics:
+            avg_temperate:
+              type: average
