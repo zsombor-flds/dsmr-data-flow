@@ -12,6 +12,7 @@ services:
       PG_DB_HOST : "${PG_DB_HOST}"
       PG_DB_PORT : "${PG_DB_PORT}"
     network_mode: host
+    restart: always
 
   postgres:
     image: postgres:13
@@ -25,7 +26,7 @@ services:
       - "5432"
     restart: always
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres-exercise-db-volume:/var/lib/postgresql/data # persist the db
 volumes:
   postgres-exercise-db-volume:
